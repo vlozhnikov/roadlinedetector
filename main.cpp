@@ -3,8 +3,7 @@
 #include "helper.h"
 
 #include <iostream>
-#include <vector>
-#include <algorithm>
+#include <numeric>
 
 using namespace cv;
 using namespace std;
@@ -107,26 +106,23 @@ const Mat process(const Mat& origin) {
     // Получить линии Хафа.
     std::vector<cv::Vec4i> lines;
     HoughLinesP(aoi, lines, 1, CV_PI/180, 20, 20, 300);
-    for (auto l : lines) {
-        auto p1 = Point(l[0], l[1]);
-        auto p2 = Point(l[2], l[3]);
 
-//        auto ps = std::vector<Point> {p1, p2};
-//        print(ps);
+    // отфильтровать линии по углу наклона.
+    std::vector<cv::Vec4i> filteredLines;
+    std::copy_if(lines.begin(), lines.end(), std::back_inserter(filteredLines), [](const cv::Vec4i& l) {
 
         auto angle = atan2((l[3] - l[1]), (l[2]  - l[0]));
         auto degree = angle * (180 / CV_PI);
 
-//        std::cout << degree << endl;
+        return (abs(degree) > 15);
+    });
 
-        if (abs(degree) > 15) {
-            line(origin, p1, p2, Scalar(0, 0, 255), 2);
-        }
+    for (auto l : filteredLines) {
+        auto p1 = Point(l[0], l[1]);
+        auto p2 = Point(l[2], l[3]);
 
+        line(origin, p1, p2, Scalar(0, 0, 255), 2);
     }
-
-    // Объединить и экстраполировать линии Хафа; отобразить их на исходном изображении.
-    // оставить только те линии, углы наклонов которых попадают в заданные пределы
 
     return aoi;
 }
