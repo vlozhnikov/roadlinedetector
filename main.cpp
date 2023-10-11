@@ -175,8 +175,6 @@ const std::map<int, std::vector<cv::Vec4i>> groupingLines(const std::vector<cv::
         using groups = std::map<int, std::vector<cv::Vec4i>>;
         groupedBy = std::reduce(localLines.begin(), localLines.end(), groups{}, [](groups acc, const cv::Vec4i& item) {
 
-    //        std::cout << endl << item << endl;
-
             // find all deltas with grouped lines before
             if (acc.empty()) {
                 acc[1] = std::vector<cv::Vec4i>{item}; // first index is 1
@@ -233,34 +231,60 @@ const std::map<int, std::vector<cv::Vec4i>> groupingLines(const std::vector<cv::
                     return firstDelta && secondDelta;
                 });
 
-    //            std::for_each(foundLines.begin(), foundLines.end(), [](const auto &e) {
-    //                std::cout << "found line: " << e << endl;
-    //            });
-
-                // если результат пусто, то создаем новую группу с новым ключем
-                if (foundLines.empty()) {
-                    acc[maxKey+1] = std::vector<cv::Vec4i>{item};
+                // проверить, чтобы item уже не находился бы в ранее обработанной группе
+                auto found = true;
+                for (const auto& a : acc) {
+                    auto result = std::find_if(a.second.begin(), a.second.end(), [item](const auto& i) {
+                        return (item[0] == i[0]) && (item[1] == i[1]) && (item[2] == i[2]) && (item[3] == i[3]);
+                    }) != a.second.end();
+                    found &= result;
                 }
-                // иначе, добавляем текущую линию к найденной группе
-                else {
-                    acc[key].push_back(item);
+
+                if (!found) {
+                    // если результат пусто, то создаем новую группу с новым ключем
+                    if (foundLines.empty()) {
+                        acc[maxKey+1] = std::vector<cv::Vec4i>{item};
+                    }
+                    // иначе, добавляем текущую линию к найденной группе
+                    else {
+                        acc[key].push_back(item);
+                    }
                 }
             }
 
             return acc;
         });
 
-        std::cout << "localLines size: " << localLines.size() << endl;
+//        std::cout << "local lines" << endl;
 
-        if (localLines.empty()) {
-            return groupedBy;
-        }
+//        for (const auto& line : localLines) {
+//            std::cout << line << ", ";
+//        }
 
+//        std::cout << endl << endl;
+//        std::cout << "grouped by" << endl;
+
+//        for (const auto& group : groupedBy) {
+//            std::cout << "key: " << group.first << endl;
+//            for (const auto& value : group.second) {
+//                std::cout << value << ",";
+//            }
+//            std::cout << endl;
+//        }
+
+        std::cout << "local lines size: " << localLines.size() << endl;
+
+        auto a = 0;
         localLines.erase(localLines.begin(), localLines.end());
         for (const auto& e : groupedBy) {
+            a += e.second.size();
             for (const auto& v : e.second) {
                 localLines.push_back(v);
             }
+        }
+
+        if (localLines.empty()) {
+            return groupedBy;
         }
 
         localCount -= 1;
