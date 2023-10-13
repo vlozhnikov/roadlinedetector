@@ -14,5 +14,5 @@ add_executable(roadlinedetector
     ./resources/video.mp4
     helper.cpp)
 
-set(OpenCV_DIR "/usr/local/Cellar/opencv/4.8.1/lib")
+set(OpenCV_LIBS "/usr/local/Cellar/opencv/4.8.1_1/lib")
 target_link_libraries( roadlinedetector ${OpenCV_LIBS} )
